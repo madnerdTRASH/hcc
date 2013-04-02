@@ -2,7 +2,7 @@
 Présentation
 ====
 
-Permet la gestion de périphériques radio chacon via un rapsberry PI
+Permet la gestion de périphériques radio chacon et SCS via un rapsberry PI
 
 Pré-requis
 ====
@@ -10,7 +10,6 @@ Pré-requis
 - Serveur Apache conseillé (Non testé sur les autres serveurs types Nginx ...)
 - PHP 5.3 minimum (facultatif, conseillé)
 - Un peu de bon sens :)
-
 
 Installation
 ====

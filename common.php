@@ -12,13 +12,10 @@ require_once('constant.php');
 require_once('RainTPL.php');
 class_exists('Functions') or require_once('Functions.class.php');
 
-
 //error_reporting(E_ALL);
 
 //Calage de la date
 date_default_timezone_set('Europe/Paris'); 
-
-
 
 //Instanciation du template
 $tpl = new RainTPL();

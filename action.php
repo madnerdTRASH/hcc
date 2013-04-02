@@ -4,29 +4,7 @@ require_once('header.php');
 
 switch($_['action']){
 
-case 'ADD_ENGINE':
-	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
-
-
-    $fichier = basename($_FILES['picture']['name']);
-    move_uploaded_file($_FILES['picture']['tmp_name'], PICTURE_FOLDER .'/'. $fichier);
-
-
-
-
-	$newEngine['picture'] = PICTURE_FOLDER .'/'.$fichier;
-	$newEngine['name'] = $_['name'];
-	$newEngine['code'] = $_['code'];
-	$newEngine['state'] = 'off';
-	$newEngine['description'] = $_['description'];
-	$newEngine['place'] = $_['idPlace'];
-	
-	$db['keys']['engines']=(isset($db['keys']['engines'])?$db['keys']['engines']+1:1);
-	$db['engines']['id-'.$db['keys']['engines']] =  $newEngine;
-	Functions::store($db);
-	header('location: settings.php');
-break;
-
+//Gestion du login
 case 'LOGIN':
 	if($_['email']==EMAIL && $_['password']==PASSWORD){
 		$_SESSION['myUser'] = serialize(array('login'=>EMAIL));
@@ -36,6 +14,7 @@ case 'LOGIN':
 	header('location: index.php');
 break;
 
+//Gestion de la deconnexion
 case 'DISCONNECT':
 	$_SESSION = array();
 	session_unset();
@@ -43,15 +22,146 @@ case 'DISCONNECT':
 	header('location: index.php');
 break;
 
-case 'ADD_PLACE':
+/*
+
+Gestion des prises
+
+*/
+
+//
+//Ajouter une prise
+//
+case 'ADD_ENGINE':
 	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
-	$newPlace['name'] = $_['place'];
-	$db['keys']['places']=(isset($db['keys']['places'])?$db['keys']['places']+1:1);
-	$db['places']['id-'.$db['keys']['places']] =  $newPlace;
+
+	//Copie de l'image sur le serveur
+    $fichier = basename($_FILES['picture']['name']);
+    move_uploaded_file($_FILES['picture']['tmp_name'], PICTURE_FOLDER .'/'. $fichier);
+
+	//Copie des donnees
+	$newEngine['picture'] = PICTURE_FOLDER .'/'.$fichier;
+	$newEngine['name'] = $_['name'];
+	$newEngine['code'] = $_['code'];
+	$newEngine['state'] = 'off';
+	$newEngine['description'] = $_['description'];
+	$newEngine['place'] = $_['idPlace'];
+	$newEngine['typeEngine'] = $_['typeEngine'];
+	
+	//Si Aucune cle n'existe alors cree la cle 1 sinon creer la cle suivante
+	$db['keys']['engines']=(isset($db['keys']['engines'])?$db['keys']['engines']+1:1);
+	$db['engines']['id-'.$db['keys']['engines']] =  $newEngine;
+	
+	//Enregistrement dans la base JSON
 	Functions::store($db);
 	header('location: settings.php');
 break;
 
+//
+//Modifier une prise
+//
+case 'MODIFY_ENGINE':
+	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+
+//Verifie si la commande n'a pas ete lance a la main
+if (!empty($_POST))
+{	
+	//Si une image est defini alors la sauvegarder
+	if ($_FILES['picture']['error'] == 0)
+	{
+	$fichier = basename($_FILES['picture']['name']);
+	move_uploaded_file($_FILES['picture']['tmp_name'], PICTURE_FOLDER .'/'. $fichier);
+	$db['engines'][$_['idengine']]['picture'] = PICTURE_FOLDER .'/'.$fichier;
+	}
+	
+	$db['engines'][$_['idengine']]['name'] = $_['name'];
+	$db['engines'][$_['idengine']]['code'] = $_['code'];
+	$db['engines'][$_['idengine']]['description'] = $_['description'];
+	$db['engines'][$_['idengine']]['typeEngine'] = $_['typeEngine'];
+	
+	//Si une piece est defini alors la sauvegarder
+	if (!empty($_['idPlace']))
+	{
+	$db['engines'][$_['idengine']]['place'] = $_['idPlace'];
+	}
+
+	//Enregistrement dans la base JSON
+	Functions::store($db);
+	
+	//Retour a la configuration de la prise
+	header('Location: ' . $_SERVER['HTTP_REFERER']);
+	
+}
+else
+{
+header('location: index.php');
+}
+break;
+
+case 'SHOW_ENGINE':
+	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+break;
+
+//
+//Modifier l'etat d'une prise
+//
+case 'CHANGE_STATE':
+
+//Ouvrir le fichier JSON
+$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+
+//Si prise CHACON
+if( $_GET['typeengine'] == 0){
+
+	//Allumage de toutes les prises CHACON
+	if($_GET['code']=='-1'){
+		foreach($db['engines'] as $id=>$engine){
+		
+			//Verifie que ce sont bien des prises chacon.
+			if($engine['typeEngine'] == 0)
+			{
+			system(' ./chacon '.PIN.' '.SENDER.' '.$engine['code'].' '.$_GET['state']);
+			}
+		}
+	}else{
+		system(' ./chacon '.PIN.' '.SENDER.' '.$_GET['code'].' '.$_GET['state']);
+	}
+	$db[$_GET['code']] = $_GET['state'];
+	
+	$engine = $db['engines'][$_['engine']];
+	$engine['state'] = $_['state'];
+	$db['engines'][$_['engine']] =  $engine;
+}
+
+//Si prise SCS
+if( $_GET['typeengine'] == 1){
+
+//Execution de la commande
+system(' ./scs '.$_GET['code'].' '.$_GET['state']);
+
+//Recuperation du nouvel etat
+$db[$_GET['code']] = $_GET['state'];
+
+//Recuperation du nouvel etat de la prise
+$engine = $db['engines'][$_['engine']];
+$engine['state'] = $_['state'];
+$db['engines'][$_['engine']] =  $engine;
+}
+
+//Sauvegarde dans la BD JSON
+Functions::store($db);
+	
+//Renvoi sur la page
+	if(!isset($_['provider'])){
+		header('location: index.php?place='.$db['engines'][$_['engine']]['place']);
+	}else{
+		echo 'A vos ordres';
+	}
+
+break;
+
+//
+//Effacer une prise
+//
 case 'DELETE_ENGINE':
 	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
 	unset($db['engines'][$_['engine']]);
@@ -59,45 +169,178 @@ case 'DELETE_ENGINE':
 	header('location: settings.php');
 break;
 
+/*
+
+Gestion des piece
+
+*/
+
+//
+//Ajouter une piece
+//
+case 'ADD_PLACE':
+	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+	$newPlace['name'] = $_['place'];
+	$db['keys']['places']=(isset($db['keys']['places'])?$db['keys']['places']+1:1);
+	$db['places']['id-'.$db['keys']['places']] =  $newPlace;
+	Functions::store($db);
+	header('location: settings.php?menu=1');
+break;
+
+//
+//Effacer une piece
+//
 case 'DELETE_PLACE':
 	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
 	unset($db['places'][$_['place']]);
 	Functions::store($db);
-	header('location: settings.php');
+	header('location: settings.php?menu=1');
 break;
 
-case 'CHANGE_STATE':
-	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
-	
-	if($_GET['code']=='-1'){
-		foreach($db['engines'] as $id=>$engine){
-			system(' ./radioEmission '.PIN.' '.SENDER.' '.$engine['code'].' '.$_GET['state']);
-		}
-	}else{
-		system(' ./radioEmission '.PIN.' '.SENDER.' '.$_GET['code'].' '.$_GET['state']);
-	}
-	$db[$_GET['code']] = $_GET['state'];
-	
-	$engine = $db['engines'][$_['engine']];
-	//$engine['name'] = $_['name'];
-	//$engine['code'] = $_['code'];
-	$engine['state'] = $_['state'];
-	//$engine['description'] = $_['description'];
-	//$engine['place'] = $_['place'];
-	$db['engines'][$_['engine']] =  $engine;
 
+case 'MODIFY_PLACE':
+	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+
+//Verifie si la commande n'a pas ete lance a la main
+if (!empty($_POST))
+{	
+	
+	
+	$db['places'][$_['idplace']]['name'] = $_['place'];
+	//Enregistrement dans la base JSON
 	Functions::store($db);
 	
-	if(!isset($_['provider'])){
-		header('location: index.php');
-	}else{
-		echo 'A vos ordres';
-	}
+	//Retour a la configuration de la prise
+	header('Location: ' . $_SERVER['HTTP_REFERER']);
+	
+}
+else
+{
+header('location: index.php');
+}
 break;
 
+/*
+
+Creation d'une programmation
+
+*/
+
+//
+//Ajout d'une programmation
+//
+case 'ADD_CRON':
+	
+//Verifie si la commande n'a pas ete lance a la main ou si aucune prise n'a ete selectionnee
+if (!empty($_POST))
+{
+
+if ($_['idCronedEngine'] != "noid")
+{
+
+$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+
+//Engistrement de la programmation dans la base JSON
+$newCron['state'] = $_['state'];
+$newCron['idCronedEngine'] = $_['idCronedEngine'];
+$newCron['time'] = $_['time'];
+$newCron['date'] = $_['date'];
+
+$db['keys']['cron']=(isset($db['keys']['cron'])?$db['keys']['cron']+1:1);
+$db['cron']['id-'.$db['keys']['cron']] =  $newCron;
+
+Functions::store($db);
+
+//Extraction de l'heure et des minutes
+$hour = substr($newCron['time'],0,2);
+$minutes = substr($newCron['time'],3,4);
+
+//Extraction de l'etat
+if ($newCron['state'] == 0){$state="off";}
+if ($newCron['state'] == 1){$state="on";}
+
+//Extraction de la date
+$date = $newCron['date'] ;
+
+//Extraction du dossier courant
+$dir = getcwd();
+
+//Extraction du type de prise
+$typeEngine = $db['engines'][$newCron['idCronedEngine']]['typeEngine'];
+if ($typeEngine == 0){$program=$dir ."/chacon ".PIN." ".SENDER;}
+if ($typeEngine == 1){$program=$dir ."/scs";}
+
+//Extraction du code de la prise
+$code = $db['engines'][$newCron['idCronedEngine']]['code'];
+
+//Ajout de la programmation dans la table CRON
+system('./cron_add '.$minutes.' '.$hour.' '.$date.' "'.$program.' '.$code.' '.$state.'"');
+
+header('location: settings.php?menu=2');
+}
+else
+{
+header('location: settings.php?menu=2&error=1');
+}
+}
+else
+{
+header('location: index.php');
+}
+break;
+
+//
+//Effacer une programmation
+//
+case 'DELETE_CRON':
+$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+
+//Recuperation de la programmation dans la base JSON
+$newCron['state'] = $db['cron'][$_['cron']]['state'];
+$newCron['idCronedEngine'] = $db['cron'][$_['cron']]['idCronedEngine'];
+$newCron['time'] = $db['cron'][$_['cron']]['time'];
+$newCron['date'] = $db['cron'][$_['cron']]['date'];
+
+//Extraction de l'heure et des minutes
+$hour = substr($newCron['time'],0,2);
+$minutes = substr($newCron['time'],3,4);
+
+//Extraction de l'etat
+if ($newCron['state'] == 0){$state="off";}
+if ($newCron['state'] == 1){$state="on";}
+
+//Extraction de la date
+$date = $newCron['date'] ;
+
+//Extraction du dossier courant
+$dir = getcwd();
+
+//Extraction du type de prise
+$typeEngine = $db['engines'][$newCron['idCronedEngine']]['typeEngine'];
+if ($typeEngine == 0){$program=$dir ."/chacon ".PIN." ".SENDER;}
+if ($typeEngine == 1){$program=$dir ."/scs";}
+
+//Extraction du code de la prise
+$code = $db['engines'][$newCron['idCronedEngine']]['code'];
+
+//Supression de la programmation dans la table CRON
+system('./cron_del '.$minutes.' '.$hour.' '.$date.' "'.$program.'" '.$code.' '.$state);	
+
+//Supression de la programmation dans la base JSON
+unset($db['cron'][$_['cron']]);
+Functions::store($db);
+	
+header('location: settings.php?menu=2');
+break;
+
+/*
+
+Gestion du controle vocale
+
+*/
 
 
-	case 'GET_YURI_XML':
+case 'GET_YURI_XML':
 		$db = (file_exists(PATH_BDD)?Functions::unstore():array());
 		$hccPath = substr($_SERVER['HTTP_REFERER'],0,strrpos($_SERVER['HTTP_REFERER'], '/')).'/action.php';
 

@@ -2,7 +2,7 @@
 
 <!--
  @nom: index
- @auteur: Idleman (idleman@idleman.fr)
+ @auteur: Idleman (idleman@idleman.fr) Modifie par MadItNerd
  @description: Page d'accueil
 -->
 
@@ -11,52 +11,33 @@
 <ul class="nav nav-tabs" id="myTab">
 {$first=0}
 {loop="places"}
-<li class="{if="$first==0"}{$first=1}active{/if}"><a href="#{$key}">{$value['name']}</a></li>
+<li class="{if="$place==$key"}active{/if}"><a href="#{$key}">{$value['name']}</a></li>
 {/loop}
-
-
-
-
 </ul>
  
 <div class="tab-content">
 {$first=0}
 {loop="places"}
 {$currentPlace=$key}
-<div class="tab-pane {if="$first==0"}{$first=1}active{/if}" id="{$key}">
-
+<div class="tab-pane {if="$place==$key"}active{/if}" id="{$key}">
       <div class="row">
-
-
 {loop="engines"}
-
 	{if="$value2['place']==$currentPlace"}
 	
 <div class="span3">
-          <h5>{$value2['name']}</h5>
-		  <a class="thumbnail" href="#"><img src="../../{$value['picture']}"></a>
-		   <br/>
-		  <p>{$value2['description']}
-		  	<ul>
-		  		<li>Code radio : <code>{$value2['code']}</code></li>
-		  		<li>Id : <code>{$key2}</code></li>
-		  		<li>Emplacement : <code>{$places[$value2['place']]['name']}</code></li>
-		  	</ul>
-		  </p>
-		  	 <div class="btn-toolbar">
-				<div class="btn-group">
-				<a class="btn {if="$value2['state']=='on'"}btn-success{/if}" href="action.php?engine={$key}&amp;action=CHANGE_STATE&amp;code={$value2['code']}&amp;state=on"><i class="icon-thumbs-up {if="$value2['state']=='on'"}icon-white{/if}"></i></a>
-				<a class="btn {if="$value2['state']=='off'"}btn-danger{/if}" href="action.php?engine={$key}&amp;action=CHANGE_STATE&amp;code={$value2['code']}&amp;state=off"><i class="icon-thumbs-down {if="$value2['state']=='off'"}icon-white{/if}"></i></a>
-				</div>
-			</div>
-        </div>
+          <h5> <code>{if="$value2['typeEngine']=='0'"}CHACON:{/if}{if="$value2['typeEngine']=='1'"}SCS:{/if}{$value2['code']}</code>{$value2['name']} 
+		  <a class="btn {if="$value2['state']=='on'"}btn-success{/if}{if="$value2['state']=='off'"}btn-danger{/if}" href="action.php?typeengine={$value2['typeEngine']}&engine={$key}&amp;action=CHANGE_STATE&amp;code={$value2['code']}&amp;state={if="$value2['state']=='off'"}on{/if}{if="$value2['state']=='on'"}off{/if}">
+		  <i class="icon-off"></i>
+		  </a>
+		  </h5>
+		  <a class="thumbnail" href="action.php?typeengine={$value2['typeEngine']}&engine={$key}&amp;action=CHANGE_STATE&amp;code={$value2['code']}&amp;state={if="$value2['state']=='off'"}on{/if}{if="$value2['state']=='on'"}off{/if}"><img src="../../{$value['picture']}"></a>
+		  {$value2['description']}
+</div>
+
         {/if}
 {/loop}
 
       </div>
-
-
-
 </div>
 
 {/loop}
@@ -65,5 +46,11 @@
 
 	  {else}
 		Vous devez vous connecter pour controler cet espace
+		<br><br>
+		Vous pouvez modifier le mot de passe dans <b><i>constant.php</i></b>
+		<hr>
+		Utilisateur par defaut:<b><i>admin</i></b>
+		<br>
+		Mot de passe par defaut:<b><i>admin</i></b>
 	  {/if}
 {include="footer"}

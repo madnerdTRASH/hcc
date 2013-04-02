@@ -1093,6 +1093,8 @@ textarea {
   height: auto;
 }
 
+
+
 textarea,
 input[type="text"],
 input[type="password"],
@@ -6036,4 +6038,12 @@ a.badge:hover {
 
 .affix {
   position: fixed;
+}
+
+input[type="time"]{
+width:60px;
+}
+
+.widespace{
+height:300px;
 }

@@ -1,38 +1,56 @@
 {include="header"}
 	{if="isset($myUser)"}
 	<ul class="nav nav-tabs" id="myTab">
-	<li class="active"><a href="#peripherique">P&eacute;ripheriques</a></li>
-	<li><a href="#lieux">Lieux</a></li>
-	<li><a href="#divers">Divers</a></li>
+	<li class="{if="$menu==0"}active{/if}"><a href="#peripherique">P&eacute;ripheriques</a></li>
+	<li class="{if="$menu==1"}active{/if}"><a href="#lieux">Lieux</a></li>
+	<li class="{if="$menu==2"}active{/if}"><a href="#programmation">Programmation</a></li>
+	<li><a href="#vocale">Contrôle Vocale</a></li>
 	<!--<li><a href="#utilisateurs">Utilisateurs</a></li>-->
 	</ul>
 	 
 	
+	{* 
+
+	--------------------
+	Peripherique
+	--------------------
+	
+	*}
+	
 	<div class="tab-content">
-	<div class="tab-pane active" id="peripherique">
+	<div class="tab-pane {if="$menu==0"}active{/if}" id="peripherique">
 
 	<table class="table table-striped">
 		<tr>
 		<td>
-		
 		    <form class="form-horizontal" action="action.php?action=ADD_ENGINE" method="POST" enctype="multipart/form-data">
 				<div class="control-group">
-					<label class="control-label" for="inputEmail">P&eacute;riph&eacute;rique</label>
+					<label class="control-label" for="inputEmail" >P&eacute;riph&eacute;rique</label>
 					<div class="controls">
 					<input type="text" name="name" id="inputEmail" placeholder="P&eacute;riph&eacute;rique">
 					</div>
 				</div>
 				<div class="control-group">
 					<label class="control-label" for="inputPassword">Code radio</label>
-					<div class="controls">
-					<input type="text" name="code" id="inputPassword" placeholder="Code radio">
-					</div>
+						<div class="controls">
+							<input type="text" name="code" id="inputPassword" placeholder="Code radio">
+							<input  name="typeEngine"  value="0" type="hidden">
+							<div class="btn-group">
+								<button class="btn dropdown-toggle" data-toggle="dropdown">
+								<span id="typeenginetext">Chacon</span>
+								<span class="caret"></span>
+								</button>
+								<ul class="dropdown-menu">						
+								<li style="cursor:pointer;">
+								<a onclick="$('#typeenginetext').html('Chacon');$('input[name=\'typeEngine\']').val('0');">Chacon</a>
+								<a onclick="$('#typeenginetext').html('SCS');$('input[name=\'typeEngine\']').val('1');">SCS</a>
+								</li>
+								</ul>
+							</div>
+						</div>		
 				</div>
 				<div class="control-group">
 					<label class="control-label" for="inputPassword">Image</label>
-					
-					
-					
 
 					<div class="controls">
 
@@ -74,7 +92,7 @@
 				</div>
 				    <div class="form-actions">
 					<button type="submit" class="btn btn-primary">Enregistrer</button>
-					<button type="button" class="btn">Annuler</button>
+
 					</div>
 			</form>
 		
@@ -87,8 +105,8 @@
 					<td><strong>{$value['name']}</strong></td>
 					<td><code>{$places[$value['place']]['name']}</code></td>
 					<td>
-						<!--<a class="btn btn-info" href="./settings.php?engine={$key}"><i class="icon-edit icon-white"></i></a> -->
 						<a class="btn btn-danger" href="./action.php?action=DELETE_ENGINE&amp;engine={$key}"><i class="icon-remove icon-white"></i></a>
+						<a class="btn btn-warning" href="./modify.php?engine={$key}"><i class="icon-edit icon-white"></i></a>
 					</td>
 				</tr>
 				
@@ -101,8 +119,17 @@
 	</table>
 	
 	</div>
+	
+	{* 
 
-	<div class="tab-pane" id="lieux">
+	--------------------
+	Menu Lieu
+	--------------------
+	
+	*}
+	
+
+	<div class="tab-pane {if="$menu==1"}active{/if}" id="lieux">
 
 	<table class="table table-striped">
 		<tr>
@@ -119,7 +146,7 @@
 				
 				    <div class="form-actions">
 					<button type="submit" class="btn btn-primary">Enregistrer</button>
-					<button type="button" class="btn">Annuler</button>
+
 					</div>
 			</form>
 		
@@ -131,8 +158,9 @@
 				<tr>
 					<td><strong>{$value['name']}</strong></td>
 					<td>
-						<!--<a class="btn btn-info" href="./setting.php?place={$key}"><i class="icon-edit icon-white"></i></a> -->
+						
 						<a class="btn btn-danger" href="./action.php?action=DELETE_PLACE&amp;place={$key}"><i class="icon-remove icon-white"></i></a>
+						<a class="btn btn-warning" href="./modify.php?place={$key}"><i class="icon-edit icon-white"></i></a>
 					</td>
 				</tr>
 				
@@ -145,8 +173,144 @@
 	</table>
 	
 	</div>
+	
+	{* 
 
-	<div class="tab-pane" id="divers">
+	------------------
+	Menu Programmation 
+	------------------
+	
+	*}
+	
+
+	
+	<div class="widespace tab-pane {if="$menu==2"}active{/if}" id="programmation">
+	
+	{if="$error==1"}
+	<div class="alert alert-error">
+	<button type="button" class="close" data-dismiss="alert">&times;</button>
+	<strong>Aucune prise selectionnée !</strong>
+	</div>
+	{/if}
+	
+	<table class="table table-striped">
+		<tr>
+		<td>
+	<form class="form-horizontal" action="action.php?action=ADD_CRON" method="POST" enctype="multipart/form-data">
+		<h2>Je veux que tu 		
+			<input  name="state"  value="1" type="hidden">
+				<div class="btn-group">
+					<button class="btn dropdown-toggle" data-toggle="dropdown">
+						<span id="statetext">allumes</span>
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu">						
+						<li style="cursor:pointer;">
+							<a onclick="$('#statetext').html('allumes');$('input[name=\'state\']').val('1');">allumes</a>
+							<a onclick="$('#statetext').html('eteignes');$('input[name=\'state\']').val('0');">eteignes</a>
+						</li>
+					</ul>
+					</div>
+		
+			<input  name="idCronedEngine" value="noid" type="hidden">
+				<div class="btn-group">
+					<button class="btn dropdown-toggle" data-toggle="dropdown">
+					<span id="CronedEnginetext">ceci</span>
+					<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu">
+						{loop="engines"}
+						<li style="cursor:pointer;">
+							<a onclick="$('#CronedEnginetext').html('{$value['name']}');$('input[name=\'idCronedEngine\']').val('{$key}');">{$value['name']}</a>
+						</li>
+						{/loop}
+					</ul>
+					</div>
+			à	
+			<input type="time" name="time" id="small">
+			
+			Tout les 
+			
+			<input  name="date" type="hidden">
+				<div class="btn-group">
+					<button class="btn dropdown-toggle" data-toggle="dropdown">
+						<span id="datetext">Date</span>
+						<span class="caret"></span>
+					</button>
+					
+			
+					<ul class="dropdown-menu">						
+						<li style="cursor:pointer;">
+							<a onclick="$('#datetext').html('lundis');$('input[name=\'date\']').val('1');">lundis</a>
+							<a onclick="$('#datetext').html('mardis');$('input[name=\'date\']').val('2');">mardis</a>
+							<a onclick="$('#datetext').html('mercredis');$('input[name=\'date\']').val('3');">mercredis</a>
+							<a onclick="$('#datetext').html('jeudis');$('input[name=\'date\']').val('4');">jeudis</a>
+							<a onclick="$('#datetext').html('vendredis');$('input[name=\'date\']').val('5');">vendredis</a>
+							<a onclick="$('#datetext').html('samedis');$('input[name=\'date\']').val('6');">samedis</a>
+							<a onclick="$('#datetext').html('dimanches');$('input[name=\'date\']').val('7');">dimanches</a>
+							<a onclick="$('#datetext').html('les jours');$('input[name=\'date\']').val('1-7');">les jours</a>
+							<a onclick="$('#datetext').html('les jours de la semaine');$('input[name=\'date\']').val('1-5');">les jours de la semaine</a>
+							<a onclick="$('#datetext').html('les jours du week-end');$('input[name=\'date\']').val('6-7');">les jours du week-end</a>
+						</li>
+					</ul>
+					</div>
+	
+	
+		</h2>
+		<br>
+		<div class="form-actions">
+			<button type="submit" class="btn btn-primary">Enregistrer</button>
+			
+
+		</div>
+		</form>
+		</td>
+		<td>
+				<table class="table table-striped table-bordered">
+				{loop="cron"}
+				<tr>
+					<td><code>{$places[$engines[$value['idCronedEngine']]['place']]['name']}</code></td>
+					<td><strong>{$engines[$value['idCronedEngine']]['name']}</strong></td>
+					<td>
+					{if="$value['date']=='1'"}Tout les lundis{/if}
+					{if="$value['date']=='2'"}Tout les mardis{/if}
+					{if="$value['date']=='3'"}Tout les mercredis{/if}
+					{if="$value['date']=='4'"}Tout les jeudis{/if}
+					{if="$value['date']=='5'"}Tout les vendredis{/if}
+					{if="$value['date']=='6'"}Tout les samedis{/if}
+					{if="$value['date']=='7'"}Tout les dimanches{/if}
+					{if="$value['date']=='1-7'"}Tout les jours{/if}
+					{if="$value['date']=='1-5'"}Tout les jours de la semaine{/if}
+					{if="$value['date']=='6-7'"}Tout les jours du week-end{/if}
+					</td>
+					<td>{$value['time']}</td>
+					<td>{if="$value['state']==1"}<a class="btn btn-success"><i class="icon-off"></i>{/if}{if="$value['state']==0"}<a class="btn btn-danger"><i class="icon-off">{/if}</td>	
+					
+					<td>
+						<a class="btn btn-danger" href="./action.php?action=DELETE_CRON&amp;cron={$key}"><i class="icon-remove icon-white"></i></a>
+					</td>
+				</tr>
+				
+				{/loop}
+				</table>
+
+
+		</td>
+		</tr>
+		</table>
+	</div>
+
+
+	{*
+	
+	--------------------
+	Menu Contrôle Vocale 
+	--------------------
+	
+	*}
+	
+	
+	<div class="tab-pane" id="vocale">
 		<p>Si vous souhaitez utiliser la reconnaissance vocale en plus de cette interface, vous devez au préalable télécharger et installer <a href="http://domotique.idleman.fr/data/interface%20vocale/YURI.rar">le logiciel gratuit YURI</a> sur un ordinateur doté de windows vista ou supérieur. (toutes les explications <a href="http://blog.idleman.fr/?p=1788">ici</a>)</p>
 
 		<p>Puis, téléchargez le xml de reconnaissance adapté a vos périphériques ici <div onclick="window.location='action.php?action=GET_YURI_XML';" class="btn btn-primary">Télécharger le XML</div></p>

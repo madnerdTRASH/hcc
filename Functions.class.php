@@ -27,10 +27,6 @@ class Functions
 	}
 
 
-
-
-
-
 	/**
 	 * Convertis la chaine passée en timestamp quel que soit sont format
 	 * (prend en charge les formats type dd-mm-yyy , dd/mm/yyy, yyyy/mm/ddd...)
