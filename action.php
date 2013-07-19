@@ -110,12 +110,12 @@ case 'CHANGE_STATE':
 $db = (file_exists(PATH_BDD)?Functions::unstore():array());
 
 //Vérifie qu'une ID et un état a été précisé
-if (isset($_GET['engine']) && isset($_GET['state']))
+if (isset($_['engine']) && isset($_['state']))
 {
 
 	//Récupération des informations de la prise à partir de l'ID
 	foreach($db['engines'] as $id=>$engine){
-		if ($_GET['engine'] == $id)
+		if ($_['engine'] == $id)
 		{
 			$code = $engine['code'];
 			$typeengine = $engine['typeEngine'];
@@ -125,19 +125,17 @@ if (isset($_GET['engine']) && isset($_GET['state']))
 			//Si c'est une prise chacon
 			if( $typeengine == 0)
 			{
-					system(' ./chacon '.PIN.' '.SENDER.' '.$code.' '.$_GET['state']); //Activation
+					system(' ./chacon '.PIN.' '.SENDER.' '.$code.' '.$_['state']); //Activation
 			}
 
 	//Si prise SCS
 			if($typeengine == 1){
 	//Execution de la commande
-				system(' ./scs '.$code.' '.$_GET['state']);
+				system(' ./scs '.$code.' '.$_['state']);
 			}
 
 		//Changement de l'état dans la base de données
-				$engine = $db['engines'][$id];
-				$engine['state'] = $_['state'];
-				$db['engines'][$id] =  $engine;
+				$db['engines'][$_['engine']]['state'] = $_['state'];
 
 	//Sauvegarde dans la BD JSON
 			Functions::store($db);
@@ -148,6 +146,7 @@ if (isset($_GET['engine']) && isset($_GET['state']))
 			}else{
 				echo 'A vos ordres';
 			}
+			
 		}
 
 
