@@ -109,55 +109,59 @@ case 'CHANGE_STATE':
 //Ouvrir le fichier JSON
 $db = (file_exists(PATH_BDD)?Functions::unstore():array());
 
-//Si prise CHACON
-if( $_GET['typeengine'] == 0){
+//Vérifie qu'une ID et un état a été précisé
+if (isset($_GET['engine']) && isset($_GET['state']))
+{
 
-	//Allumage de toutes les prises CHACON
-	if($_GET['code']=='-1'){
-		foreach($db['engines'] as $id=>$engine){
-		
-			//Verifie que ce sont bien des prises chacon.
-			if($engine['typeEngine'] == 0)
+	//Récupération des informations de la prise à partir de l'ID
+	foreach($db['engines'] as $id=>$engine){
+		if ($_GET['engine'] == $id)
+		{
+			$code = $engine['code'];
+			$typeengine = $engine['typeEngine'];
+		}
+	}
+
+			//Si c'est une prise chacon
+			if( $typeengine == 0)
 			{
-			system(' ./chacon '.PIN.' '.SENDER.' '.$engine['code'].' '.$_GET['state']);
+					system(' ./chacon '.PIN.' '.SENDER.' '.$code.' '.$_GET['state']); //Activation
+			}
+
+	//Si prise SCS
+			if($typeengine == 1){
+	//Execution de la commande
+				system(' ./scs '.$code.' '.$_GET['state']);
+			}
+
+		//Changement de l'état dans la base de données
+				$engine = $db['engines'][$id];
+				$engine['state'] = $_['state'];
+				$db['engines'][$id] =  $engine;
+
+	//Sauvegarde dans la BD JSON
+			Functions::store($db);
+
+	//Renvoi sur la page (ou message A vos ordres si YURI est utilisée)
+			if(!isset($_['provider'])){
+				header('location: index.php?place='.$db['engines'][$_['engine']]['place']);
+			}else{
+				echo 'A vos ordres';
 			}
 		}
-	}else{
-		system(' ./chacon '.PIN.' '.SENDER.' '.$_GET['code'].' '.$_GET['state']);
-	}
-	$db[$_GET['code']] = $_GET['state'];
-	
-	$engine = $db['engines'][$_['engine']];
-	$engine['state'] = $_['state'];
-	$db['engines'][$_['engine']] =  $engine;
-}
 
-//Si prise SCS
-if( $_GET['typeengine'] == 1){
 
-//Execution de la commande
-system(' ./scs '.$_GET['code'].' '.$_GET['state']);
+		break;
 
-//Recuperation du nouvel etat
-$db[$_GET['code']] = $_GET['state'];
-
-//Recuperation du nouvel etat de la prise
-$engine = $db['engines'][$_['engine']];
-$engine['state'] = $_['state'];
-$db['engines'][$_['engine']] =  $engine;
-}
-
-//Sauvegarde dans la BD JSON
-Functions::store($db);
-	
-//Renvoi sur la page
-	if(!isset($_['provider'])){
-		header('location: index.php?place='.$db['engines'][$_['engine']]['place']);
-	}else{
-		echo 'A vos ordres';
-	}
-
-break;
+	//
+	//Effacer une prise
+	//
+		case 'DELETE_ENGINE':
+		$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+		unset($db['engines'][$_['engine']]);
+		Functions::store($db);
+		header('location: settings.php');
+		break;
 
 //
 //Effacer une prise
@@ -340,64 +344,61 @@ Gestion du controle vocale
 */
 
 
-case 'GET_YURI_XML':
-		$db = (file_exists(PATH_BDD)?Functions::unstore():array());
-		$hccPath = substr($_SERVER['HTTP_REFERER'],0,strrpos($_SERVER['HTTP_REFERER'], '/')).'/action.php';
+	case 'GET_YURI_XML':
+	$db = (file_exists(PATH_BDD)?Functions::unstore():array());
+	$hccPath = substr($_SERVER['HTTP_REFERER'],0,strrpos($_SERVER['HTTP_REFERER'], '/')).'/action.php';
 
-		$template = '<grammar version="1.0" xml:lang="fr-FR" mode="voice" root="ruleEedomus" xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
-						  <rule id="ruleEedomus" scope="public">
-						    <example>Yuri allume le salon</example>
-						    <tag>out.action=new Object(); </tag>
-						    <item>Yuri</item>
-						    <one-of>
-						      <item>allume<tag>out.action.state="on"</tag></item>
-						      <item>eteint<tag>out.action.state="off"</tag></item>
-						    </one-of>
+	$template = '<grammar version="1.0" xml:lang="fr-FR" mode="voice" root="ruleEedomus" xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
+	<rule id="ruleEedomus" scope="public">
+		<example>Yuri allume le salon</example>
+		<tag>out.action=new Object(); </tag>
+		<item>Yuri</item>
+		<one-of>
+		<item>allume<tag>out.action.state="on"</tag></item>
+		<item>eteint<tag>out.action.state="off"</tag></item>
+	</one-of>
 
-						    <one-of>';
+	<one-of>';
 
-						    foreach($db['engines'] as $id=>$engine){
-						    $template .= '<item>'.$engine['name'].'
-						        <tag>out.action.engine=\''.$id.'\'</tag>
-								<tag>out.action.code=\''.$engine['code'].'\'</tag>
-						      </item>';
-							}
-						   
+	foreach($db['engines'] as $id=>$engine){
+		$template .= '<item>'.$engine['name'].'
+		<tag>out.action.engine=\''.$id.'\'</tag>
+	</item>';
+}
 
 
-						  $template .= '
 
-						  	<item>tout
-						        <tag>out.action.engine=\'id-all\'</tag>
-								<tag>out.action.code=\'-1\'</tag>
-						      </item>
+$template .= '
 
-						   </one-of>
-						    <tag>out.action.action=\'CHANGE_STATE\'</tag>
-							 <tag>out.action.provider=\'yuri\'</tag>
-							  <tag>out.action._attributes.threashold="0.80";</tag>
-						    <tag>out.action._attributes.uri="'.$hccPath.'";</tag>
-						  </rule>
-						</grammar>';
+</one-of>
+<tag>out.action.action=\'CHANGE_STATE\'</tag>
+<tag>out.action.provider=\'yuri\'</tag>
+<tag>out.action._attributes.threashold="0.80";</tag>
+<tag>out.action._attributes.uri="'.$hccPath.'";</tag>
+</rule>
+</grammar>';
 
-						header('Content-Description: File Transfer');
-			    		header('Content-Type: application/octet-stream');
-			    		header('Content-Disposition: attachment; filename=hcc_yuri_xml.xml');
-			    		header('Content-Transfer-Encoding: binary');
-			    		header('Expires: 0');
-			   	 		header('Cache-Control: must-revalidate');
-			    		header('Pragma: public');
-			    		header('Content-Length: ' . strlen($template));
-			    		ob_clean();
-			    		flush();
-						echo $template;
-				
-	break;
-	default:
-		echo 'Aucune action correcte n\'est sp�cifi�e';
-	break;
+header('Content-Description: File Transfer');
+header('Content-Type: application/octet-stream');
+header('Content-Disposition: attachment; filename=hcc_yuri_xml.xml');
+header('Content-Transfer-Encoding: binary');
+header('Expires: 0');
+header('Cache-Control: must-revalidate');
+header('Pragma: public');
+header('Content-Length: ' . strlen($template));
+ob_clean();
+flush();
+echo $template;
+
+break;
+default:
+echo 'Aucune action correcte n\'est spécifiée';
+break;
 
 }
+
+
+
 
 
 
